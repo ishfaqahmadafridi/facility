@@ -1,26 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.db.mongodb import get_database
 from app.schemas.user import User, ProfileData, ProviderVerificationGate
-from app.core.security import verify_token
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.api.deps import get_current_user
 from typing import Optional
 
 router = APIRouter(prefix="/users", tags=["users"])
-auth_scheme = HTTPBearer()
-
-async def get_current_user(token: HTTPAuthorizationCredentials = Depends(auth_scheme), db = Depends(get_database)):
-    payload = verify_token(token.credentials)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    email: str = payload.get("sub")
-    user = await db.users.find_one({"email": email})
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
 
 @router.get("/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_user)):

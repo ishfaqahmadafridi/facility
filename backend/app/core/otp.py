@@ -1,41 +1,42 @@
+"""
+app/core/otp.py
+──────────────────────────────────────────────────────────────────
+Async OTP generation and Redis-backed storage.
+"""
 import random
-import redis
-from app.core.config import settings
+from app.db.redis import redis_client
+from app.common.constants import OTPConstants
 
-# Memory fallback for environments without Redis
-_memory_otp = {}
+async def generate_otp() -> str:
+    """Generates a random N-digit OTP."""
+    # Ensure it's exactly the length specified, padding with leading zeros if necessary
+    otp = "".join([str(random.randint(0, 9)) for _ in range(OTPConstants.LENGTH)])
+    return otp
 
-try:
-    redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-    redis_client.ping()
-    USE_REDIS = True
-except Exception:
-    print("Warning: Redis not found. Using memory fallback for OTP.")
-    USE_REDIS = False
+async def save_otp_async(phone: str, otp: str) -> None:
+    """Saves OTP to Redis with a TTL."""
+    key = f"{OTPConstants.REDIS_PREFIX}{phone}"
+    await redis_client.setex(key, OTPConstants.EXPIRE_SECONDS, otp)
 
-def generate_otp():
-    return "".join([str(random.randint(0, 9)) for _ in range(6)])
+async def get_otp_async(phone: str) -> str | None:
+    """Retrieves OTP from Redis."""
+    key = f"{OTPConstants.REDIS_PREFIX}{phone}"
+    return await redis_client.get(key)
 
-def save_otp(email: str, otp: str):
-    if USE_REDIS:
-        redis_client.setex(f"otp:{email}", 300, otp)
-    else:
-        _memory_otp[f"otp:{email}"] = (otp, __import__("time").time() + 300)
+async def delete_otp_async(phone: str) -> None:
+    """Deletes OTP from Redis after successful verification."""
+    key = f"{OTPConstants.REDIS_PREFIX}{phone}"
+    await redis_client.delete(key)
 
-def get_otp(email: str):
-    if USE_REDIS:
-        return redis_client.get(f"otp:{email}")
-    else:
-        data = _memory_otp.get(f"otp:{email}")
-        if data:
-            val, expiry = data
-            if __import__("time").time() < expiry:
-                return val
-            del _memory_otp[f"otp:{email}"]
-        return None
-
-def delete_otp(email: str):
-    if USE_REDIS:
-        redis_client.delete(f"otp:{email}")
-    else:
-        _memory_otp.pop(f"otp:{email}", None)
+async def check_rate_limit(phone: str) -> bool:
+    """
+    Checks if an OTP was requested too recently.
+    Returns True if allowed, False if rate limited.
+    """
+    rl_key = f"rl:otp:{phone}"
+    exists = await redis_client.exists(rl_key)
+    if exists:
+        return False
+    # Set a rate limit key for the window duration
+    await redis_client.setex(rl_key, OTPConstants.RATE_LIMIT_WINDOW, "1")
+    return True
