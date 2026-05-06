@@ -1,0 +1,16 @@
+﻿const Map<String, String> stringsUr = {
+  'app_name': 'پاکستان سپر ایپ',
+  'welcome': 'خوش آمدید',
+  'login': 'لاگ ان کریں',
+  'phone_number': 'فون نمبر',
+  'rides': 'سواری',
+  'home_repairs': 'گھر کی مرمت',
+  'medical_care': 'طبی دیکھ بھال',
+  'roadside_help': 'سڑک پر مدد',
+  'wallet': 'والٹ',
+  'book_now': 'ابھی بک کریں',
+  'searching_driver': 'ڈرائیور تلاش کیا جا رہا ہے...',
+  'confirm': 'تصدیق کریں',
+  'cancel': 'منسوخ کریں',
+  'language': 'زبان',
+};
