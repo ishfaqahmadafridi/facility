@@ -1,0 +1,16 @@
+﻿const Map<String, String> stringsEn = {
+  'app_name': 'Pakistan Super App',
+  'welcome': 'Welcome',
+  'login': 'Login',
+  'phone_number': 'Phone Number',
+  'rides': 'Rides',
+  'home_repairs': 'Home Repairs',
+  'medical_care': 'Medical Care',
+  'roadside_help': 'Roadside Help',
+  'wallet': 'Wallet',
+  'book_now': 'Book Now',
+  'searching_driver': 'Searching for a Driver...',
+  'confirm': 'Confirm',
+  'cancel': 'Cancel',
+  'language': 'Language',
+};

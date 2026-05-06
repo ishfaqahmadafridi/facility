@@ -1,25 +1,8 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'app.dart';
 
-void main() {
-  runApp(const FacilityApp());
-}
-
-class FacilityApp extends StatelessWidget {
-  const FacilityApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Facility',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Service Bidding App - Professional Backend Connected'),
-        ),
-      ),
-    );
-  }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const SuperApp());
 }
