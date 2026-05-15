@@ -1,25 +1,9 @@
-from fastapi import FastAPI
-from app.core.config import settings
-from app.db.mongodb import connect_to_mongo, close_mongo_connection
-from bson import ObjectId
-from datetime import datetime
-from app.api import auth, user, feed, governance
+"""Expose the Django ASGI application under ``app.main:app``.
 
-app = FastAPI(title=settings.PROJECT_NAME)
+This keeps existing Uvicorn commands working even though the project's
+canonical ASGI entrypoint lives in ``config.asgi``.
+"""
 
-app.include_router(auth.router)
-app.include_router(user.router)
-app.include_router(feed.router)
-app.include_router(governance.router)
+from config.asgi import application
 
-@app.on_event("startup")
-async def startup_db_client():
-    await connect_to_mongo()
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await close_mongo_connection()
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Service Bidding App API", "status": "online"}
+app = application
