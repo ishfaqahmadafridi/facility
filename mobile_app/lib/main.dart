@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/dual_mode_provider.dart';
+import 'screens/root_screen.dart';
 
 void main() {
-  runApp(const FacilityApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DualModeProvider()),
+      ],
+      child: const FacilityApp(),
+    ),
+  );
 }
 
 class FacilityApp extends StatelessWidget {
@@ -10,16 +20,13 @@ class FacilityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Facility',
+      title: 'KamKaro',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Service Bidding App - Professional Backend Connected'),
-        ),
-      ),
+      home: const RootScreen(),
     );
   }
 }
