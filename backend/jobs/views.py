@@ -1,9 +1,10 @@
 import math
+from decimal import Decimal, InvalidOperation
 from rest_framework import generics, views, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import JobCategory, Job
-from .serializers import JobCategorySerializer, JobSerializer
+from .models import JobCategory, Job, Ride
+from .serializers import JobCategorySerializer, JobSerializer, RideSerializer
 from users.models import ProviderProfile
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -197,22 +198,91 @@ class CreateRideView(views.APIView):
             return Response({'error': 'Must be in CUSTOMER mode.'}, status=status.HTTP_403_FORBIDDEN)
             
         data = request.data
-        from .models import Ride
-        from .serializers import RideSerializer
+
+        required_fields = (
+            'pickup_latitude',
+            'pickup_longitude',
+            'pickup_address',
+            'dropoff_latitude',
+            'dropoff_longitude',
+            'dropoff_address',
+            'suggested_fare',
+        )
+        missing_fields = [field for field in required_fields if data.get(field) in (None, '')]
+        if missing_fields:
+            return Response(
+                {'error': f"Missing required ride fields: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
+            suggested_fare = Decimal(str(data.get('suggested_fare')))
             ride = Ride.objects.create(
                 customer=user.customer_profile,
-                pickup_latitude=data.get('pickup_latitude'),
-                pickup_longitude=data.get('pickup_longitude'),
+                pickup_latitude=float(data.get('pickup_latitude')),
+                pickup_longitude=float(data.get('pickup_longitude')),
                 pickup_address=data.get('pickup_address'),
-                dropoff_latitude=data.get('dropoff_latitude'),
-                dropoff_longitude=data.get('dropoff_longitude'),
+                dropoff_latitude=float(data.get('dropoff_latitude')),
+                dropoff_longitude=float(data.get('dropoff_longitude')),
                 dropoff_address=data.get('dropoff_address'),
-                suggested_fare=data.get('suggested_fare')
+                suggested_fare=suggested_fare,
             )
             return Response(RideSerializer(ride).data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError, InvalidOperation):
+            return Response(
+                {'error': 'Ride coordinates and fare must be valid numeric values.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class AvailableRidesView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if user.active_mode != 'PROVIDER':
+            return Response(
+                {'error': 'You must be in PROVIDER mode to view available rides.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not hasattr(user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        provider = user.provider_profile
+        if not provider.is_rider_mode:
+            return Response(
+                {'error': 'Enable Rider Mode to receive ride requests.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if provider.latitude is None or provider.longitude is None:
+            return Response(
+                {'error': 'Provider location is not set. Please go online with location enabled.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        radius = request.query_params.get('radius', 15)
+        try:
+            radius = float(radius)
+        except ValueError:
+            return Response({'error': 'Invalid radius.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        rides = Ride.objects.filter(status='PENDING').select_related('customer__user')
+        available_rides = []
+        for ride in rides:
+            distance = haversine(
+                provider.latitude,
+                provider.longitude,
+                ride.pickup_latitude,
+                ride.pickup_longitude,
+            )
+            if distance <= radius:
+                ride_data = RideSerializer(ride).data
+                ride_data['distance_km'] = round(distance, 2)
+                available_rides.append(ride_data)
+
+        available_rides.sort(key=lambda item: item['distance_km'])
+        return Response({'rides': available_rides}, status=status.HTTP_200_OK)
 
 class RiderAcceptRideView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -221,16 +291,122 @@ class RiderAcceptRideView(views.APIView):
         user = request.user
         if user.active_mode != 'PROVIDER':
             return Response({'error': 'Must be in PROVIDER mode.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not hasattr(user, 'provider_profile') or not user.provider_profile.is_rider_mode:
+            return Response({'error': 'Enable Rider Mode to accept rides.'}, status=status.HTTP_403_FORBIDDEN)
             
-        from .models import Ride
         try:
             ride = Ride.objects.get(pk=pk, status='PENDING')
             ride.rider = user.provider_profile
             ride.status = 'ACCEPTED'
+            ride.agreed_fare = ride.suggested_fare
+            ride.is_counter_offer = False
             ride.save()
-            return Response({'message': 'Ride accepted.'}, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    'message': 'Ride accepted.',
+                    'ride': RideSerializer(ride).data,
+                },
+                status=status.HTTP_200_OK,
+            )
         except Ride.DoesNotExist:
             return Response({'error': 'Ride not found or not available.'}, status=status.HTTP_404_NOT_FOUND)
+
+class RiderOfferRideView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+        if user.active_mode != 'PROVIDER':
+            return Response({'error': 'Must be in PROVIDER mode.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not hasattr(user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.provider_profile.is_rider_mode:
+            return Response({'error': 'Enable Rider Mode to counter rides.'}, status=status.HTTP_403_FORBIDDEN)
+
+        amount = request.data.get('amount')
+        if amount in (None, ''):
+            return Response({'error': 'amount is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            offered_amount = Decimal(str(amount))
+        except InvalidOperation:
+            return Response({'error': 'amount must be numeric.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if offered_amount <= 0:
+            return Response({'error': 'amount must be greater than zero.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ride = Ride.objects.get(pk=pk, status='PENDING')
+        except Ride.DoesNotExist:
+            return Response({'error': 'Ride not found or not available.'}, status=status.HTTP_404_NOT_FOUND)
+
+        ride.rider = user.provider_profile
+        ride.status = 'COUNTERED'
+        ride.agreed_fare = offered_amount
+        ride.is_counter_offer = ride.suggested_fare is not None and offered_amount != ride.suggested_fare
+        ride.save()
+
+        return Response(
+            {
+                'message': 'Counter-offer sent. Waiting for customer approval.' if ride.is_counter_offer else 'Ride accepted.',
+                'ride': RideSerializer(ride).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class CustomerAcceptCounterOfferView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+        if user.active_mode != 'CUSTOMER':
+            return Response({'error': 'Must be in CUSTOMER mode.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            ride = Ride.objects.get(pk=pk, customer=user.customer_profile, status='COUNTERED')
+        except Ride.DoesNotExist:
+            return Response({'error': 'Counter-offer not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        ride.status = 'ACCEPTED'
+        ride.save()
+
+        return Response(
+            {
+                'message': 'Counter-offer accepted.',
+                'ride': RideSerializer(ride).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class CustomerDeclineCounterOfferView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+        if user.active_mode != 'CUSTOMER':
+            return Response({'error': 'Must be in CUSTOMER mode.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            ride = Ride.objects.get(pk=pk, customer=user.customer_profile, status='COUNTERED')
+        except Ride.DoesNotExist:
+            return Response({'error': 'Counter-offer not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        ride.status = 'PENDING'
+        ride.rider = None
+        ride.agreed_fare = None
+        ride.is_counter_offer = False
+        ride.save()
+
+        return Response(
+            {
+                'message': 'Counter-offer declined. Ride request is live again.',
+                'ride': RideSerializer(ride).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class ActiveJobsView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -245,27 +421,46 @@ class ActiveJobsView(views.APIView):
                 provider=user.provider_profile, 
                 status__in=['ACCEPTED', 'IN_PROGRESS']
             )
-            from .models import Ride
-            from .serializers import RideSerializer
             rides = Ride.objects.filter(
                 rider=user.provider_profile,
-                status__in=['ACCEPTED', 'IN_PROGRESS']
+                status__in=['COUNTERED', 'ACCEPTED', 'IN_PROGRESS']
             )
         else:
             jobs = Job.objects.filter(
                 customer=user.customer_profile,
                 status__in=['PENDING', 'ACCEPTED', 'IN_PROGRESS']
             )
-            from .models import Ride
-            from .serializers import RideSerializer
             rides = Ride.objects.filter(
                 customer=user.customer_profile,
-                status__in=['PENDING', 'ACCEPTED', 'IN_PROGRESS']
+                status__in=['PENDING', 'COUNTERED', 'ACCEPTED', 'IN_PROGRESS']
             )
             
         return Response({
             'jobs': JobSerializer(jobs, many=True).data,
             'rides': RideSerializer(rides, many=True).data
+        }, status=status.HTTP_200_OK)
+
+class JobHistoryView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if user.active_mode == 'PROVIDER':
+            if not hasattr(user, 'provider_profile'):
+                return Response({'error': 'Not a provider'}, status=status.HTTP_400_BAD_REQUEST)
+            jobs = Job.objects.filter(
+                provider=user.provider_profile,
+                status__in=['COMPLETED', 'DISPUTED', 'CANCELLED']
+            ).order_by('-updated_at')
+        else:
+            jobs = Job.objects.filter(
+                customer=user.customer_profile,
+                status__in=['COMPLETED', 'DISPUTED', 'CANCELLED']
+            ).order_by('-updated_at')
+
+        return Response({
+            'jobs': JobSerializer(jobs, many=True).data,
         }, status=status.HTTP_200_OK)
 
 class EstimatorView(views.APIView):

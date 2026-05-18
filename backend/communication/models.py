@@ -33,3 +33,22 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report {self.id} for Job {self.job.id}"
+
+class SOSAlert(models.Model):
+    STATUS_CHOICES = (
+        ('OPEN', 'Open'),
+        ('ACKNOWLEDGED', 'Acknowledged'),
+        ('RESOLVED', 'Resolved'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sos_alerts')
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    emergency_contact = models.CharField(max_length=20, blank=True, null=True)
+    shared_with_police = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"SOS {self.id} by {self.user.phone_number}"

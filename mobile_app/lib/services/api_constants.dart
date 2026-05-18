@@ -1,19 +1,26 @@
 import 'dart:io';
 
 class ApiConstants {
-  static String get baseUrl {
-    String host;
+  static String get host {
     if (Platform.isAndroid) {
-      host = "10.0.2.2";
+      return '10.0.2.2';
     } else if (Platform.isIOS) {
-      host = "127.0.0.1";
-    } else {
-      host = "localhost";
+      return '127.0.0.1';
     }
+    return 'localhost';
+  }
 
-    final url = "http://$host:8000";
-    // This will help you see the address in your terminal/debug console
-    print("Connecting to Backend at: $url");
+  static String get baseUrl {
+    final url = 'http://$host:8000';
+    print('Connecting to Backend at: $url');
     return url;
   }
+
+  static String get wsBaseUrl {
+    final url = 'ws://$host:8000';
+    print('Connecting to WebSocket Backend at: $url');
+    return url;
+  }
+
+  static String get apiV1BaseUrl => '$baseUrl/api/v1';
 }

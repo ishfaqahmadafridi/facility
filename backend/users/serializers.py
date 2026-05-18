@@ -8,15 +8,19 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'is_verified', 'phone_number')
 
 class CustomerProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = CustomerProfile
-        fields = ('id', 'rating')
+        fields = ('id', 'rating', 'user')
         read_only_fields = ('id', 'rating')
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = ProviderProfile
-        fields = ('id', 'categories', 'experience_years', 'bio', 'police_verified', 'is_online', 'latitude', 'longitude', 'rating', 'video_intro')
+        fields = ('id', 'user', 'categories', 'experience_years', 'bio', 'police_verified', 'is_online', 'is_rider_mode', 'latitude', 'longitude', 'rating', 'video_intro')
         read_only_fields = ('id', 'rating', 'police_verified')
 
 class NurseProfileSerializer(serializers.ModelSerializer):

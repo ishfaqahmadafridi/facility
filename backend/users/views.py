@@ -157,10 +157,32 @@ class ToggleOnlineView(views.APIView):
         if lat is not None and lng is not None:
             provider_profile.latitude = float(lat)
             provider_profile.longitude = float(lng)
+
+        if 'is_rider_mode' in request.data:
+            provider_profile.is_rider_mode = bool(request.data.get('is_rider_mode'))
             
         provider_profile.save()
         status_text = 'Online' if provider_profile.is_online else 'Offline'
         return Response({'message': f'Provider is now {status_text}.'}, status=status.HTTP_200_OK)
+
+class ToggleRiderModeView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        if not hasattr(user, 'provider_profile'):
+            return Response({'error': 'User does not have a provider profile.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        provider_profile = user.provider_profile
+        is_rider_mode = request.data.get('is_rider_mode')
+        if is_rider_mode is None:
+            return Response({'error': 'is_rider_mode field is required (boolean).'}, status=status.HTTP_400_BAD_REQUEST)
+
+        provider_profile.is_rider_mode = bool(is_rider_mode)
+        provider_profile.save()
+        state = 'enabled' if provider_profile.is_rider_mode else 'disabled'
+        return Response({'message': f'Rider mode {state}.'}, status=status.HTTP_200_OK)
 
 class ProviderProfileView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -173,3 +195,14 @@ class ProviderProfileView(views.APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ProviderProfile.DoesNotExist:
             return Response({'error': 'Provider not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+class CurrentProviderProfileView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        from .serializers import ProviderProfileSerializer
+        serializer = ProviderProfileSerializer(request.user.provider_profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)

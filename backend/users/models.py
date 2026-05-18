@@ -63,6 +63,7 @@ class ProviderProfile(models.Model):
     bio = models.TextField(blank=True, null=True)
     police_verified = models.BooleanField(default=False)
     is_online = models.BooleanField(default=False)
+    is_rider_mode = models.BooleanField(default=False)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     rating = models.FloatField(default=0.0)
