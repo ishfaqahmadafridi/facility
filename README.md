@@ -38,49 +38,45 @@ A professional, cross-platform service bidding marketplace for the Pakistani mar
 ## ⚙️ Setup & Installation
 
 ### Backend
-
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/ishfaqahmadafridi/facility.git
-    cd facility/backend
-    ```
-
-2.  **Environment Setup**:
-    Create a `.env` file in `/backend` using the template below:
-    ```env
-    PROJECT_NAME="Facility"
-    MONGODB_URL="mongodb://localhost:27017"
-    DATABASE_NAME="facility_db"
-    SECRET_KEY="your_secret_key"
-    REDIS_URL="redis://localhost:6379/0"
-    ```
-
-3.  **Run with Virtual Environment**:
-    ```bash
-    python -m venv venv
-    ./venv/Scripts/activate # Windows
-    pip install -r requirements.txt
-    uvicorn app.main:app --reload
-    ```
-
-4.  **Run Services (Docker)**:
-    Ensure Docker is running and execute:
-    ```bash
-    docker-compose up -d
-    ```
+1. **Navigate to backend folder**:
+   ```bash
+   cd backend
+   ```
+2. **Start Services (Docker)**:
+   Ensure Docker is running and execute:
+   ```bash
+   docker-compose up -d
+   ```
+   *Note: If Docker is not available, the backend will start in **In-Memory Mock Mode**.*
+3. **Run the Server**:
+   ```bash
+   .\venv\Scripts\activate
+   uvicorn app.main:app --reload
+   ```
 
 ### Frontend (Flutter)
+1. **Navigate to mobile_app folder**:
+   ```bash
+   cd mobile_app
+   ```
+2. **Get Packages**:
+   ```bash
+   flutter pub get
+   ```
+3. **Run the App**:
+   ```bash
+   flutter run
+   ```
 
-1.  **Install Flutter**: Follow [flutter.dev](https://flutter.dev) to install the SDK.
-2.  **Get Packages**:
-    ```bash
-    cd mobile_app
-    flutter pub get
-    ```
-3.  **Run the App**:
-    ```bash
-    flutter run
-    ```
+## 🔌 Connectivity & Verification
+The mobile app is configured in `lib/services/api_service.dart` to connect to `10.0.2.2:8000`. 
+- **Android Emulator**: Works automatically.
+- **Physical Device**: Update `baseUrl` in `api_service.dart` to your computer's local IP (e.g., `192.168.x.x`).
+
+**To verify the connection:**
+1. Start the backend.
+2. Visit `http://127.0.0.1:8000/docs` in your browser.
+3. Launch the mobile app. If you see the job feed or can request an OTP, the connection is successful.
 
 ## 🛡️ Security & Compliance
 
