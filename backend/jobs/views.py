@@ -25,6 +25,13 @@ class CategoriesView(generics.ListAPIView):
     serializer_class = JobCategorySerializer
 
 class ProvidersNearbyView(views.APIView):
+    """
+    Retrieves a list of nearby providers based on the user's location.
+    
+    idea.odt Compliance: 5.3 Women Safety Filter
+    - Includes a strict `women_only` parameter. If activated, it validates
+      that the requesting customer is female, and only returns female providers.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -34,14 +41,19 @@ class ProvidersNearbyView(views.APIView):
         if user.active_mode != 'CUSTOMER':
             return Response({'error': 'You must be in CUSTOMER mode to search for providers.'}, status=status.HTTP_403_FORBIDDEN)
             
+        # Parse query parameters
         lat = request.query_params.get('latitude')
         lng = request.query_params.get('longitude')
         radius = request.query_params.get('radius', 10) # default 10km
         category = request.query_params.get('category')
         women_only = request.query_params.get('women_only', 'false').lower() == 'true'
         
+        # --- Women Safety Filter Validation ---
         if women_only and user.gender != 'F':
-            return Response({'error': 'Women only filter is restricted to female customers.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {'error': 'Women only filter is restricted to female customers.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         if not lat or not lng:
             return Response({'error': 'latitude and longitude are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -53,14 +65,16 @@ class ProvidersNearbyView(views.APIView):
         except ValueError:
             return Response({'error': 'Invalid latitude, longitude, or radius.'}, status=status.HTTP_400_BAD_REQUEST)
             
-        # Get online providers
+        # Base Query: Get online providers
         providers = ProviderProfile.objects.filter(is_online=True).exclude(user=user)
         
+        # Apply Women Safety Filter
         if women_only:
             providers = providers.filter(user__gender='F')
             
         nearby_providers = []
         for provider in providers:
+            # Skip providers without an active location
             if provider.latitude is None or provider.longitude is None:
                 continue
                 
@@ -77,7 +91,7 @@ class ProvidersNearbyView(views.APIView):
                 provider_data['distance_km'] = round(distance, 2)
                 nearby_providers.append(provider_data)
                 
-        # Sort by distance
+        # Sort by distance (closest first)
         nearby_providers.sort(key=lambda x: x['distance_km'])
         
         return Response({'providers': nearby_providers}, status=status.HTTP_200_OK)
@@ -464,19 +478,31 @@ class JobHistoryView(views.APIView):
         }, status=status.HTTP_200_OK)
 
 class EstimatorView(views.APIView):
+    """
+    Provides standard service rates and material cost estimates.
+    
+    idea.odt Compliance: 5.3 Labour Rate & Material Estimator
+    - Returns standardized hourly rates for various service categories.
+    - Calculates total estimated cost based on requested hours.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # A simple estimator logic returning standard rates
-        # In a real application, this would calculate dynamically based on region
+        # Parse query parameters
         category = request.query_params.get('category', 'Labour')
-        hours = request.query_params.get('hours', 1)
+        hours_param = request.query_params.get('hours', 1)
         
+        # Validate hours input
         try:
-            hours = float(hours)
+            hours = float(hours_param)
+            if hours <= 0:
+                hours = 1.0
         except ValueError:
             hours = 1.0
             
+        # Standardized Rate Card (PKR/hour)
+        # Note: In a production environment, this should ideally be fetched 
+        # from a database table (e.g., JobCategory model) to allow dynamic updates.
         rate_card = {
             'Labour': 1500,
             'Plumber': 2000,
@@ -485,6 +511,7 @@ class EstimatorView(views.APIView):
             'Nurse': 3000
         }
         
+        # Calculate estimate
         hourly_rate = rate_card.get(category, 1500)
         estimated_cost = hourly_rate * hours
         
