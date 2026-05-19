@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
-import 'verify_otp_screen.dart';
+import 'package:facility/screens/auth/verify_otp_screen.dart';
 import 'login/login_controller.dart';
 import 'login/login_app_bar.dart';
 import 'login/page_padding.dart';

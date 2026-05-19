@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'ride_meta_chip.dart';
 import 'customer_name_chip.dart';
 import 'distance_chip.dart';
 import 'pinned_chip.dart';

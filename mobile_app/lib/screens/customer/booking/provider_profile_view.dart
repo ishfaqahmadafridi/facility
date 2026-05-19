@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/api_service.dart';
+import 'package:facility/services/api_service.dart';
 import 'booking_checkout_view.dart';
 
 // components
@@ -12,7 +12,6 @@ import 'provider_profile_components/reviews_section.dart';
 import 'provider_profile_components/placeholder_reviews.dart';
 import 'provider_profile_components/booking_button.dart';
 import 'provider_profile_components/spacing.dart';
-import 'provider_profile_components/small_divider.dart';
 
 class ProviderProfileView extends StatefulWidget {
   final Map<String, dynamic> initialProviderData;
