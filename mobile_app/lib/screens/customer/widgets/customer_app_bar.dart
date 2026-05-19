@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/dual_mode_provider.dart';
 
 class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomerAppBar({super.key});
@@ -8,16 +6,30 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: const Text('Customer Mode'),
+      title: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('KamKaro', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          Text('📍 Current Location: Islamabad', style: TextStyle(fontSize: 12, color: Colors.white70)),
+        ],
+      ),
       backgroundColor: Colors.blueAccent,
+      foregroundColor: Colors.white,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.swap_horiz),
-          tooltip: 'Switch to Provider',
-          onPressed: () {
-            context.read<DualModeProvider>().toggleMode();
-          },
-        ),
+        Container(
+          margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white24,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Center(
+            child: Text(
+              'CUSTOMER',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 10),
+            ),
+          ),
+        )
       ],
     );
   }

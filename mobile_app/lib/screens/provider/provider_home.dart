@@ -1,49 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/dual_mode_provider.dart';
 
-class ProviderHome extends StatelessWidget {
-  const ProviderHome({Key? key}) : super(key: key);
+import 'dashboard/provider_dashboard_view.dart';
+import 'earnings/provider_earnings_view.dart';
+import 'rides/provider_rides_feed_view.dart';
+import 'widgets/provider_app_bar.dart';
+import 'widgets/provider_bottom_nav.dart';
+import 'widgets/provider_profile_tab.dart';
+
+/// Shell screen for the provider mode — app bar, tabs, navigation.
+class ProviderHome extends StatefulWidget {
+  const ProviderHome({super.key});
+
+  @override
+  State<ProviderHome> createState() => _ProviderHomeState();
+}
+
+class _ProviderHomeState extends State<ProviderHome> {
+  int _currentIndex = 0;
+
+  static const _tabs = <Widget>[
+    ProviderDashboardView(),
+    ProviderRidesFeedView(),
+    ProviderEarningsView(),
+    ProviderProfileTab(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Provider Mode'),
-        backgroundColor: Colors.green,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz),
-            tooltip: 'Switch to Customer',
-            onPressed: () {
-              context.read<DualModeProvider>().toggleMode();
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.work, size: 80, color: Colors.green),
-            SizedBox(height: 20),
-            Text(
-              'Welcome, Provider!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('Find jobs, manage your schedule, and check earnings.'),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: Colors.green,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Jobs'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Earnings'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      appBar: const ProviderAppBar(),
+      body: _tabs[_currentIndex],
+      bottomNavigationBar: ProviderBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
       ),
     );
   }
