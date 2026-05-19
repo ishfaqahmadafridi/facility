@@ -67,7 +67,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          SectionTitle2('Active Jobs'),
+          const SectionTitle2('Active Jobs'),
           const SizedBox(height: 12),
           if (_controller.jobs.isEmpty)
             const Text('No active job conversations yet.', style: TextStyle(color: Colors.grey))
@@ -78,21 +78,21 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   onCall: () => _controller.openCall(context, job.cast<String, dynamic>()),
                 )),
           const SizedBox(height: 24),
-          SectionTitle2('Active Rides'),
+          const SectionTitle2('Active Rides'),
           const SizedBox(height: 12),
           if (_controller.rides.isEmpty)
             const Text('No active rides right now.', style: TextStyle(color: Colors.grey))
           else
             ..._controller.rides.map((ride) => RideCard2(ride: (ride as Map).cast<String, dynamic>())),
           const SizedBox(height: 24),
-          history_titles.SectionTitle3('Completed & Disputed Jobs'),
+          const history_titles.SectionTitle3('Completed & Disputed Jobs'),
           const SizedBox(height: 12),
           if (_controller.historyJobs.isEmpty)
             const Text('No completed jobs available for dispute reporting.', style: TextStyle(color: Colors.grey))
           else
             ..._controller.historyJobs.map((job) => HistoryCard3(item: (job as Map).cast<String, dynamic>())),
           const SizedBox(height: 24),
-          SectionTitle2('Extras'),
+          const SectionTitle2('Extras'),
           const SizedBox(height: 12),
           const BookingComponent01(),
           const BookingComponent02(),

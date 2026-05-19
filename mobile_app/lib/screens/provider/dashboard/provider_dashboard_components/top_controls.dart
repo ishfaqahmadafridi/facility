@@ -18,7 +18,7 @@ class TopControls extends StatelessWidget {
           Row(
             children: [
               OnlineStatusLabel(isOnline: isOnline),
-              Switch(value: isOnline, activeColor: Colors.green, onChanged: onToggle),
+              Switch(value: isOnline, activeThumbColor: Colors.green, onChanged: onToggle),
             ],
           ),
           RadiusDropdown(value: radius, onChanged: onRadiusChanged),

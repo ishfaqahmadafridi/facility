@@ -38,7 +38,7 @@ class CategoryCarousel extends StatelessWidget {
                 color: isSelected ? Colors.blue : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.grey.shade300),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))],
               ),
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(catIcon, size: 40, color: isSelected ? Colors.white : Colors.blue), const SizedBox(height: 8), Text(catName, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Colors.black87))]),
             ),

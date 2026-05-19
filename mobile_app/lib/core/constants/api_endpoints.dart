@@ -15,7 +15,7 @@ class ApiEndpoints {
 
   // ── User / Provider ───────────────────────────────────────────────────────
   static const String myProviderProfile = '/users/provider/me/';
-  static String providerDetails(String id) => '/users/providers/$id/';
+  static String providerDetails(String id) => '/users/provider/$id/'; // Gap #7 fix: was /providers/
 
   // ── Jobs ───────────────────────────────────────────────────────────────────
   static const String categories = '/jobs/categories/';
@@ -25,6 +25,7 @@ class ApiEndpoints {
   static const String activeJobs = '/jobs/active/';
   static const String jobHistory = '/jobs/history/';
   static String acceptJob(String id) => '/jobs/$id/accept/';
+  static String completeJob(String id) => '/jobs/$id/complete/'; // Gap #5
 
   // ── Rides ──────────────────────────────────────────────────────────────────
   static const String createRide = '/jobs/rides/create/';
@@ -34,8 +35,20 @@ class ApiEndpoints {
   static String acceptCounterOffer(String id) => '/jobs/rides/$id/accept-counter/';
   static String declineCounterOffer(String id) => '/jobs/rides/$id/decline-counter/';
 
+  // ── Portfolio (idea.odt §6, §11) ──────────────────────────────────────────
+  static const String portfolio = '/jobs/portfolio/'; // Gap #3
+  static String deletePortfolio(String id) => '/jobs/portfolio/$id/delete/'; // Gap #3
+
+  // ── Reviews (idea.odt §6) ─────────────────────────────────────────────────
+  static String createReview(String jobId) => '/jobs/$jobId/review/'; // Gap #3
+  static String providerReviews(String providerId) => '/jobs/provider/$providerId/reviews/'; // Gap #3
+
   // ── Payments ───────────────────────────────────────────────────────────────
   static const String wallet = '/payments/wallet/';
+  static const String withdraw = '/payments/withdraw/'; // Gap #6
+
+  // ── Estimator (idea.odt §12) ──────────────────────────────────────────────
+  static const String estimator = '/jobs/estimator/'; // Gap #4
 
   // ── Communication ──────────────────────────────────────────────────────────
   static const String sos = '/communication/sos/';
@@ -44,3 +57,4 @@ class ApiEndpoints {
   static String agoraToken(String jobId) => '/communication/$jobId/agora-token/';
   static String reportIssue(String jobId) => '/communication/job/$jobId/report/';
 }
+

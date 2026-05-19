@@ -69,9 +69,9 @@ class _CounterOfferDialogState extends State<CounterOfferDialog> {
                   final amount = num.tryParse(_bidController.text) ?? 0;
                   final success = await widget.onSubmit(amount);
                   
-                  if (mounted && success) {
+                  if (context.mounted && success) {
                     Navigator.pop(context, true);
-                  } else if (mounted) {
+                  } else if (context.mounted) {
                     setState(() => _isProcessing = false);
                   }
                 },

@@ -12,9 +12,9 @@ class ReviewItem extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: Text(author),
             subtitle: Text(text),
-            trailing: Row(
+            trailing: const Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [Icon(Icons.star, color: Colors.orange, size: 16), Text('5.0')],
+              children: [Icon(Icons.star, color: Colors.orange, size: 16), Text('5.0')],
             ),
           ),
           const Divider(),

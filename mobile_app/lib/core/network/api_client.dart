@@ -120,4 +120,9 @@ class ApiClient {
     final streamed = await request.send();
     return http.Response.fromStream(streamed);
   }
+
+  /// DELETE with auth headers.
+  Future<http.Response> delete(String path) async {
+    return http.delete(_uri(path), headers: _authHeaders);
+  }
 }

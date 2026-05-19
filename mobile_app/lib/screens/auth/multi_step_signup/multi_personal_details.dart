@@ -15,7 +15,7 @@ class MultiPersonalDetails extends StatelessWidget {
         TextField(controller: fullNameCtrl, decoration: const InputDecoration(labelText: 'Full Name')),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
-          value: gender,
+          initialValue: gender,
           decoration: const InputDecoration(labelText: 'Gender'),
           items: const [
             DropdownMenuItem(value: 'M', child: Text('Male')),

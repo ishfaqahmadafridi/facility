@@ -30,8 +30,8 @@ class MapHalf extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0.16),
-            Colors.teal.withOpacity(0.10),
+            color.withValues(alpha: 0.16),
+            Colors.teal.withValues(alpha: 0.10),
           ],
         ),
       ),
@@ -39,7 +39,7 @@ class MapHalf extends StatelessWidget {
         children: [
           CustomPaint(
             size: Size(width, height),
-            painter: GridPainter(color: color.withOpacity(0.22)),
+            painter: GridPainter(color: color.withValues(alpha: 0.22)),
           ),
           Positioned(
             top: 10,
@@ -47,7 +47,7 @@ class MapHalf extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),

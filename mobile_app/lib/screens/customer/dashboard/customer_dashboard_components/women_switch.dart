@@ -6,5 +6,5 @@ class WomenSwitch extends StatelessWidget {
   const WomenSwitch({required this.value, required this.onChanged, super.key});
 
   @override
-  Widget build(BuildContext context) => SwitchListTile(contentPadding: EdgeInsets.zero, value: value, activeColor: Colors.pink, title: const Text('Women safety filter'), subtitle: const Text('Female customers can request female providers only.'), onChanged: onChanged);
+  Widget build(BuildContext context) => SwitchListTile(contentPadding: EdgeInsets.zero, value: value, activeThumbColor: Colors.pink, title: const Text('Women safety filter'), subtitle: const Text('Female customers can request female providers only.'), onChanged: onChanged);
 }

@@ -14,8 +14,8 @@ class ProviderAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppConstants.appName,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          const Text(AppConstants.appName,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
           Text(
             '📍 Expected Job Radius: ${AppConstants.providerDefaultRadius.toInt()}km',
             style: const TextStyle(fontSize: 12, color: AppColors.textOnPrimaryFaded),

@@ -5,12 +5,12 @@ class BookingComponent22 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return const Card(
+      margin: EdgeInsets.only(bottom: 8),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         child: Row(
-          children: const [
+          children: [
             Icon(Icons.place),
             SizedBox(width: 8),
             Expanded(child: Text('Booking component 22')),

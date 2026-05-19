@@ -30,7 +30,7 @@ class HeaderContainer extends StatelessWidget {
               Switch(
                 value: isRiderMode,
                 onChanged: onToggle,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),

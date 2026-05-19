@@ -32,12 +32,12 @@ class DummyComponentsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    return const SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 12),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: const [
+        children: [
           ChatComponent01(), ChatComponent02(), ChatComponent03(), ChatComponent04(), ChatComponent05(),
           ChatComponent06(), ChatComponent07(), ChatComponent08(), ChatComponent09(), ChatComponent10(),
           ChatComponent11(), ChatComponent12(), ChatComponent13(), ChatComponent14(), ChatComponent15(),

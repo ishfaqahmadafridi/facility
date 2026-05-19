@@ -340,4 +340,113 @@ class ApiService {
     } catch (_) {}
     return false;
   }
+
+  // ── Complete Job (Gap #5) ─────────────────────────────────────────────────
+
+  Future<bool> completeJob(String jobId) async {
+    if (!_client.isAuthenticated) return false;
+    try {
+      final res = await _client.post(ApiEndpoints.completeJob(jobId));
+      return res.statusCode == 200;
+    } catch (_) {}
+    return false;
+  }
+
+  // ── Portfolio (Gap #3) ────────────────────────────────────────────────────
+
+  Future<List<dynamic>> getPortfolio() async {
+    if (!_client.isAuthenticated) return [];
+    try {
+      final res = await _client.get(ApiEndpoints.portfolio);
+      if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
+    } catch (_) {}
+    return [];
+  }
+
+  Future<bool> uploadPortfolioItem(File image, {String description = ''}) async {
+    if (!_client.isAuthenticated) return false;
+    try {
+      final res = await _client.multipartFilePost(
+        ApiEndpoints.portfolio,
+        fileField: 'image',
+        file: image,
+        fields: {'description': description},
+      );
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (_) {}
+    return false;
+  }
+
+  Future<bool> deletePortfolioItem(String id) async {
+    if (!_client.isAuthenticated) return false;
+    try {
+      final res = await _client.delete(ApiEndpoints.deletePortfolio(id));
+      return res.statusCode == 200;
+    } catch (_) {}
+    return false;
+  }
+
+  // ── Reviews (Gap #3) ──────────────────────────────────────────────────────
+
+  Future<bool> submitReview({
+    required String jobId,
+    required double rating,
+    String comment = '',
+  }) async {
+    if (!_client.isAuthenticated) return false;
+    try {
+      final res = await _client.post(
+        ApiEndpoints.createReview(jobId),
+        body: {'rating': rating, 'comment': comment},
+      );
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (_) {}
+    return false;
+  }
+
+  Future<List<dynamic>> getProviderReviews(String providerId) async {
+    if (!_client.isAuthenticated) return [];
+    try {
+      final res = await _client.get(ApiEndpoints.providerReviews(providerId));
+      if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
+    } catch (_) {}
+    return [];
+  }
+
+  // ── Estimator (Gap #4) ────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>?> getEstimate({
+    String category = 'Labour',
+    double hours = 1.0,
+  }) async {
+    if (!_client.isAuthenticated) return null;
+    try {
+      final res = await _client.get(ApiEndpoints.estimator, queryParams: {
+        'category': category,
+        'hours': hours.toString(),
+      });
+      if (res.statusCode == 200) return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {}
+    return null;
+  }
+
+  // ── Withdrawal (Gap #6) ───────────────────────────────────────────────────
+
+  Future<bool> requestWithdrawal({
+    required double amount,
+    required String method,
+    required String accountNumber,
+  }) async {
+    if (!_client.isAuthenticated) return false;
+    try {
+      final res = await _client.post(ApiEndpoints.withdraw, body: {
+        'amount': amount,
+        'method': method,
+        'account_number': accountNumber,
+      });
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (_) {}
+    return false;
+  }
 }
+

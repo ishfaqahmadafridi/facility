@@ -9,7 +9,7 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
         children: [
-          ProviderAvatar(),
+          const ProviderAvatar(),
           const SizedBox(height: 16),
           NameTitle(name: name),
         ],

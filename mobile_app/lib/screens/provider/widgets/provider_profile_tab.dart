@@ -29,7 +29,7 @@ class ProviderProfileTab extends StatelessWidget {
         ListTile(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           tileColor: AppColors.surfaceLight,
-          leading: Icon(Icons.swap_horiz, color: AppColors.providerPrimary),
+          leading: const Icon(Icons.swap_horiz, color: AppColors.providerPrimary),
           title: const Text('Switch to Customer Mode',
               style: TextStyle(fontWeight: FontWeight.bold)),
           trailing: const Icon(Icons.chevron_right),

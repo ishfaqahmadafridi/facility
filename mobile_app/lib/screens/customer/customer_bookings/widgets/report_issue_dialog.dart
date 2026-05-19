@@ -51,9 +51,9 @@ class _ReportIssueDialogState extends State<ReportIssueDialog> {
               : () async {
                   setState(() => _isSubmitting = true);
                   final success = await widget.onSubmit(_controller.text);
-                  if (mounted && success) {
+                  if (context.mounted && success) {
                     Navigator.pop(context, true);
-                  } else if (mounted) {
+                  } else if (context.mounted) {
                     setState(() => _isSubmitting = false);
                   }
                 },

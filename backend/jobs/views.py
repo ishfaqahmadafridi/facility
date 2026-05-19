@@ -3,8 +3,11 @@ from decimal import Decimal, InvalidOperation
 from rest_framework import generics, views, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import JobCategory, Job, Ride
-from .serializers import JobCategorySerializer, JobSerializer, RideSerializer
+from .models import JobCategory, Job, Ride, PortfolioItem, Review
+from .serializers import (
+    JobCategorySerializer, JobSerializer, RideSerializer,
+    PortfolioItemSerializer, ReviewSerializer,
+)
 from users.models import ProviderProfile
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -521,3 +524,116 @@ class EstimatorView(views.APIView):
             'estimated_hours': hours,
             'total_estimated_cost': estimated_cost
         }, status=status.HTTP_200_OK)
+
+
+# ── Portfolio CRUD ────────────────────────────────────────────────────────────
+
+class PortfolioListCreateView(views.APIView):
+    """
+    idea.odt Compliance: §6 Provider Profile & §11 Portfolio Management.
+    GET  — List all portfolio items for the authenticated provider.
+    POST — Upload a new portfolio image with an optional description.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        items = PortfolioItem.objects.filter(
+            provider=request.user.provider_profile
+        ).order_by('-created_at')
+        return Response(
+            PortfolioItemSerializer(items, many=True, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request):
+        if not hasattr(request.user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = PortfolioItemSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(provider=request.user.provider_profile)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PortfolioDeleteView(views.APIView):
+    """
+    Allows a provider to delete their own portfolio item.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        if not hasattr(request.user, 'provider_profile'):
+            return Response({'error': 'Provider profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            item = PortfolioItem.objects.get(pk=pk, provider=request.user.provider_profile)
+        except PortfolioItem.DoesNotExist:
+            return Response({'error': 'Portfolio item not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        item.delete()
+        return Response({'message': 'Portfolio item deleted.'}, status=status.HTTP_200_OK)
+
+
+# ── Reviews CRUD ──────────────────────────────────────────────────────────────
+
+class ReviewCreateView(views.APIView):
+    """
+    idea.odt Compliance: §6 Provider Profile Reviews.
+    Allows a customer to submit a star rating and text review for a COMPLETED job.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, job_id):
+        user = request.user
+
+        # Only customers can leave reviews
+        if user.active_mode != 'CUSTOMER':
+            return Response({'error': 'Must be in CUSTOMER mode.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            job = Job.objects.get(pk=job_id, customer=user.customer_profile, status='COMPLETED')
+        except Job.DoesNotExist:
+            return Response(
+                {'error': 'Job not found or not yet completed.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Prevent duplicate reviews
+        if hasattr(job, 'review'):
+            return Response({'error': 'A review already exists for this job.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if job.provider is None:
+            return Response({'error': 'Job has no assigned provider to review.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(
+                job=job,
+                reviewer=user.customer_profile,
+                provider=job.provider,
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProviderReviewsListView(views.APIView):
+    """
+    Returns all reviews for a given provider. Public-facing for the profile page.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, provider_id):
+        try:
+            provider = ProviderProfile.objects.get(pk=provider_id)
+        except ProviderProfile.DoesNotExist:
+            return Response({'error': 'Provider not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        reviews = Review.objects.filter(provider=provider).order_by('-created_at')
+        return Response(
+            ReviewSerializer(reviews, many=True).data,
+            status=status.HTTP_200_OK,
+        )

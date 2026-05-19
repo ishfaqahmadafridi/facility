@@ -88,7 +88,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               // minimal resend action: call API if available
               try {
                 await ApiService.instance.sendOTP(widget.phoneNumber);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent')));
               } catch (_) {}
             }),

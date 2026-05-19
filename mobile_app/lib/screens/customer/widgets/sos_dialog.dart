@@ -44,7 +44,7 @@ class _SOSDialogState extends State<SOSDialog> {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: _shareWithPolice,
-              activeColor: Colors.red,
+              activeThumbColor: Colors.red,
               title: const Text('Share with police'),
               subtitle: const Text('Keep this on for the highest-priority escalation.'),
               onChanged: (value) => setState(() => _shareWithPolice = value),
@@ -82,7 +82,7 @@ class _SOSDialogState extends State<SOSDialog> {
                     _notesController.text.trim(),
                   );
                   
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                   
                   ScaffoldMessenger.of(context).showSnackBar(

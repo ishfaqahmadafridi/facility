@@ -33,7 +33,7 @@ class BookingCheckoutBody extends StatelessWidget {
           
           const SectionLabel(text: 'Job Location'),
           const SmallSpacing(height: 8),
-          MapPreview(locationText: 'Map Pin Placed: F-8, Islamabad'),
+          const MapPreview(locationText: 'Map Pin Placed: F-8, Islamabad'),
           const SizedBox(height: 24),
           
           const SectionLabel(text: 'Define Job Scope'),
@@ -46,7 +46,7 @@ class BookingCheckoutBody extends StatelessWidget {
           AmountInput(controller: amountController),
           const SizedBox(height: 16),
           
-          EscrowInfoCard(text: 'Funds will be securely held in Escrow and only released when you approve the job is completed.'),
+          const EscrowInfoCard(text: 'Funds will be securely held in Escrow and only released when you approve the job is completed.'),
         ],
       ),
     );
